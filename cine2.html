@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuestro Cinema Privado 🎬</title>
+    <style>
+        /* Variables de Diseño (Estética Dark/Cinema) */
+        :root {
+            --bg-color: #0a0a0c;
+            --card-bg: rgba(20, 20, 25, 0.7);
+            --accent-color: #e50914; /* Rojo cine/Netflix */
+            --text-color: #ffffff;
+            --text-secondary: #999999;
+            --glow: 0 0 20px rgba(229, 9, 20, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: radial-gradient(circle at top, #1a1a24 0%, #0a0a0c 70%);
+        }
+
+        /* Contenedor Principal */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(255,255,255,0.1);
+        }
+
+        header p {
+            color: var(--text-secondary);
+            margin-top: 10px;
+            font-size: 1.1rem;
+        }
+
+        /* Secciones/Grid de Episodios */
+        .episodes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 30px;
+        }
+
+        .episode-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            transition: all 0.4s ease;
+        }
+
+        .episode-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            border-color: var(--accent-color);
+            box-shadow: var(--glow);
+        }
+
+        /* Miniatura simulada con CSS elegante */
+        .thumbnail-placeholder {
+            height: 150px;
+            background: linear-gradient(45deg, #141419, #23232f);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .thumbnail-placeholder::after {
+            content: '▶';
+            font-size: 2rem;
+            color: rgba(255,255,255,0.3);
+            transition: color 0.3s;
+        }
+
+        .episode-card:hover .thumbnail-placeholder::after {
+            color: var(--accent-color);
+        }
+
+        .episode-info {
+            padding: 20px;
+        }
+
+        .episode-info h3 {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+
+        .episode-info p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Interfaz del Reproductor (Oculta por defecto) */
+        .player-interface {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(5, 5, 5, 0.98);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .player-interface.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .video-wrapper {
+            width: 85%;
+            max-width: 1000px;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8), var(--glow);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .player-controls {
+            margin-top: 25px;
+            width: 85%;
+            max-width: 1000px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .episode-title-playing {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .btn-back {
+            background: transparent;
+            color: var(--text-color);
+            border: 2px solid var(--text-color);
+            padding: 10px 25px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-back:hover {
+            background: var(--text-color);
+            color: var(--bg-color);
+            box-shadow: 0 0 15px rgba(255,255,255,0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="catalog-view">
+        <header>
+            <h1>Nuestro Cinema Privado 🖤</h1>
+            <p>Un espacio especial para ver nuestra serie favorita</p>
+        </header>
+
+        <main class="episodes-grid" id="grid-container"></main>
+    </div>
+
+    <div class="player-interface" id="player-view">
+        <div class="video-wrapper">
+            <video id="main-video" controls controlsList="nodownload"></video>
+        </div>
+        <div class="player-controls">
+            <div class="episode-title-playing" id="playing-title">Capítulo X</div>
+            <button class="btn-back" onclick="closePlayer()">Volver al Catálogo</button>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURACIÓN DE TUS VIDEOS
+        // Coloca aquí los nombres exactos de tus archivos .mp4
+        const episodes = [
+            { id: 1, title: "Capítulo 1: El Inicio", file: "cap1.mp4" },
+            { id: 2, title: "Capítulo 2: El Descubrimiento", file: "cap2.mp4" },
+            { id: 3, title: "Capítulo 3: título del cap 3", file: "cap3.mp4" },
+            { id: 4, title: "Capítulo 4: título del cap 4", file: "cap4.mp4" },
+            { id: 5, title: "Capítulo 5: título del cap 5", file: "cap5.mp4" },
+            { id: 6, title: "Capítulo 6: título del cap 6", file: "cap6.mp4" },
+            { id: 7, title: "Capítulo 7: título del cap 7", file: "cap7.mp4" },
+            { id: 8, title: "Capítulo 8: título del cap 8", file: "cap8.mp4" },
+            { id: 9, title: "Capítulo 9: título del cap 9", file: "cap9.mp4" },
+            { id: 10, title: "Capítulo 10: título del cap 10", file: "cap10.mp4" },
+            { id: 11, title: "Capítulo 11: título del cap 11", file: "cap11.mp4" },
+            { id: 12, title: "Capítulo 12: El Final Seguro", file: "cap12.mp4" }
+        ];
+
+        // Renderizar la lista de capítulos dinámicamente
+        const grid = document.getElementById('grid-container');
+        episodes.forEach(ep => {
+            const card = document.createElement('div');
+            card.className = 'episode-card';
+            card.onclick = () => openPlayer(ep.title, ep.file);
+            card.innerHTML = `
+                <div class="thumbnail-placeholder"></div>
+                <div class="episode-info">
+                    <h3>${ep.title}</h3>
+                    <p>Disponible en HD</p>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+
+        // Funciones para controlar las interfaces
+        const playerView = document.getElementById('player-view');
+        const videoElement = document.getElementById('main-video');
+        const playingTitle = document.getElementById('playing-title');
+
+        function openPlayer(title, filename) {
+            playingTitle.innerText = title;
+            videoElement.src = filename; // Carga el archivo MP4 asignado
+            playerView.classList.add('active');
+            videoElement.play(); // Reproduce automáticamente al entrar
+        }
+
+        function closePlayer() {
+            videoElement.pause();
+            videoElement.src = ""; // Resetea el video
+            playerView.classList.remove('active');
+        }
+    </script>
+</body>
+</html>
